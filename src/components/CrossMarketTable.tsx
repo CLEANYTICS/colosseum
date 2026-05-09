@@ -227,11 +227,13 @@ export default function CrossMarketTable({
   changePctMap,
   solanaPrices,
   pacificaMarkets,
+  lastUpdated,
 }: {
   tradfiMap: Record<string, number>
   changePctMap: Record<string, number>
   solanaPrices: Record<string, SolanaAssetData>
   pacificaMarkets: PacificaMarket[]
+  lastUpdated?: string
 }) {
   const [category, setCategory] = useState<Category>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -274,7 +276,7 @@ export default function CrossMarketTable({
             Cross-Market Intelligence
           </span>
           <span style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
-            TradFi · Solana Spot · Solana Perps · click any row
+            {lastUpdated ? `last updated ${lastUpdated}` : 'TradFi · Solana Spot · Solana Perps'}
           </span>
         </div>
 

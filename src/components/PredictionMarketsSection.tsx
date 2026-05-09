@@ -12,7 +12,6 @@ const OUTCOME_COLORS: Record<string, string> = {
 }
 
 const OUTCOMES = ['Cut 50+ bps', 'Cut 25 bps', 'No change', 'Hike 25 bps', 'Hike 50+ bps']
-
 const KALSHI_COLOR = '#0D6B52'
 
 interface MarketOdds {
@@ -21,7 +20,7 @@ interface MarketOdds {
 }
 
 const WARSH_EVENTS = [
-  { date: '2026-01-30', label: 'Warsh leaked', color: '#E24B4A' },
+  { date: '2026-01-30', label: 'Warsh nominated', color: '#E24B4A' },
   { date: '2026-02-04', label: 'Senate hearing', color: '#534AB7' },
   { date: '2026-04-22', label: 'Confirmed', color: '#0D6B52' },
   { date: '2026-05-15', label: 'Powell exits', color: '#0D6B52' },
@@ -40,8 +39,13 @@ function HistoryChart({ polyHistory, kalshiHistory }: {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const W = canvas.width
-    const H = canvas.height
+    const dpr = window.devicePixelRatio || 1
+    const W = canvas.clientWidth
+    const H = canvas.clientHeight
+    canvas.width = W * dpr
+    canvas.height = H * dpr
+    ctx.scale(dpr, dpr)
+
     const PAD = { top: 16, right: 16, bottom: 32, left: 40 }
     const CW = W - PAD.left - PAD.right
     const CH = H - PAD.top - PAD.bottom
@@ -140,7 +144,7 @@ function HistoryChart({ polyHistory, kalshiHistory }: {
     if (!canvas || !polyHistory.length) return
     const rect = canvas.getBoundingClientRect()
     const mouseX = e.clientX - rect.left
-    const W = canvas.width
+    const W = canvas.clientWidth
     const PAD = { left: 40, right: 16 }
     const CW = W - PAD.left - PAD.right
     const allTs = [...polyHistory.map(d => d.t), ...kalshiHistory.map(d => d.t)]
@@ -175,25 +179,17 @@ function HistoryChart({ polyHistory, kalshiHistory }: {
 
       <canvas
         ref={canvasRef}
-        width={680}
-        height={200}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
-        style={{ width: '100%', height: '200px', cursor: 'crosshair' }}
+        style={{ width: '100%', height: '200px', cursor: 'crosshair', display: 'block' }}
       />
 
       {tooltip && (
         <div style={{
-          position: 'absolute',
-          left: Math.min(tooltip.x + 8, 560),
-          top: tooltip.y,
-          backgroundColor: '#fff',
-          border: '1px solid #ccc5b5',
-          padding: '8px 12px',
-          fontSize: '11px',
-          fontFamily: 'Georgia, serif',
-          pointerEvents: 'none',
-          zIndex: 10,
+          position: 'absolute', left: Math.min(tooltip.x + 8, 560), top: tooltip.y,
+          backgroundColor: '#fff', border: '1px solid #ccc5b5',
+          padding: '8px 12px', fontSize: '11px', fontFamily: 'Georgia, serif',
+          pointerEvents: 'none', zIndex: 10,
         }}>
           <div style={{ fontWeight: 600, marginBottom: '4px', color: '#1a1a1a' }}>{tooltip.date}</div>
           <div style={{ color: '#1a1a1a' }}>Polymarket: {tooltip.pm}</div>
@@ -213,7 +209,12 @@ function HistoryChart({ polyHistory, kalshiHistory }: {
   )
 }
 
-function OddsColumn({ title, volume, odds }: { title: string; volume: string; odds: MarketOdds[] }) {
+function OddsColumn({ title, volume, odds, noChangePct }: {
+  title: string
+  volume: string
+  odds: MarketOdds[]
+  noChangePct: string
+}) {
   const oddsMap = Object.fromEntries(odds.map(o => [o.label, o.probability]))
 
   return (
@@ -259,12 +260,14 @@ export default function PredictionMarketsSection({
   polyHistory = [],
   kalshiHistory = [],
   title = 'Prediction Markets — Fed Decision June 2026',
+  lastUpdated,
 }: {
   polymarketOdds: MarketOdds[]
   kalshiOdds: MarketOdds[]
   polyHistory?: PMHistoryPoint[]
   kalshiHistory?: PMHistoryPoint[]
   title?: string
+  lastUpdated?: string
 }) {
   const [showHistory, setShowHistory] = useState(false)
 
@@ -272,41 +275,56 @@ export default function PredictionMarketsSection({
   const kalshiNoChange = kalshiOdds.find(o => o.label === 'No change')?.probability ?? 0
   const bothAgree = Math.abs(polyNoChange - kalshiNoChange) < 0.05
   const avgProb = ((polyNoChange + kalshiNoChange) / 2 * 100).toFixed(1)
+  const polyNoChangePct = (polyNoChange * 100).toFixed(1)
+  const kalshiNoChangePct = (kalshiNoChange * 100).toFixed(1)
 
   return (
     <div style={{ marginBottom: '0' }}>
 
       {/* Section header */}
       <div style={{
-        borderTop: '2px solid #1a1a1a',
-        paddingTop: '12px',
-        marginBottom: '0',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
+        borderTop: '2px solid #1a1a1a', paddingTop: '12px', marginBottom: '0',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
       }}>
-        <span style={{
-          fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: '#1a1a1a', fontFamily: 'Georgia, serif', fontWeight: 600,
-        }}>
+        <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#1a1a1a', fontFamily: 'Georgia, serif', fontWeight: 600 }}>
           {title}
         </span>
-        <button
-          onClick={() => setShowHistory(h => !h)}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '10px',
-            color: showHistory ? '#1a1a1a' : '#9b8e80',
-            cursor: 'pointer',
-            fontFamily: 'Georgia, serif',
-            letterSpacing: '0.05em',
-            textDecoration: 'underline',
-          }}
-        >
-          {showHistory ? 'Hide history ↑' : 'Show history ↓'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {lastUpdated && (
+            <span style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
+              last updated {lastUpdated}
+            </span>
+          )}
+          <button
+            onClick={() => setShowHistory(h => !h)}
+            style={{
+              background: 'none', border: 'none',
+              fontSize: '10px', color: showHistory ? '#1a1a1a' : '#9b8e80',
+              cursor: 'pointer', fontFamily: 'Georgia, serif',
+              letterSpacing: '0.05em', textDecoration: 'underline',
+            }}
+          >
+            {showHistory ? 'Hide history' : 'Show history'}
+          </button>
+        </div>
       </div>
+
+      {/* High conviction callout */}
+      {bothAgree && parseFloat(avgProb) >= 95 && (
+        <div style={{
+          marginTop: '12px', marginBottom: '4px',
+          padding: '10px 16px',
+          borderLeft: '3px solid #1a1a1a',
+          backgroundColor: '#f5f3ef',
+        }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+            {avgProb}% probability of no change at June FOMC
+          </span>
+          <span style={{ fontSize: '11px', color: '#6b6055', fontFamily: 'Georgia, serif', fontStyle: 'italic', marginLeft: '12px' }}>
+            Polymarket and Kalshi converge — highest conviction signal of the cycle
+          </span>
+        </div>
+      )}
 
       {/* History chart */}
       {showHistory && (
@@ -315,22 +333,18 @@ export default function PredictionMarketsSection({
         </div>
       )}
 
-      {/* Split columns — no box, just a dividing hairline */}
+      {/* Split columns */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
         <div style={{ borderRight: '1px solid #e8e2d6', paddingRight: '32px' }}>
-          <OddsColumn title="Polymarket" volume="$18.5M" odds={polymarketOdds} />
+          <OddsColumn title="Polymarket" volume="$18.5M" odds={polymarketOdds} noChangePct={polyNoChangePct} />
         </div>
         <div style={{ paddingLeft: '32px' }}>
-          <OddsColumn title="Kalshi" volume="$2.9M" odds={kalshiOdds} />
+          <OddsColumn title="Kalshi" volume="$2.9M" odds={kalshiOdds} noChangePct={kalshiNoChangePct} />
         </div>
       </div>
 
-      {/* Convergence note — no box, just italic text */}
-      <div style={{
-        paddingTop: '12px',
-        borderTop: '1px solid #e8e2d6',
-        display: 'flex', alignItems: 'center', gap: '8px',
-      }}>
+      {/* Convergence note */}
+      <div style={{ paddingTop: '12px', borderTop: '1px solid #e8e2d6' }}>
         {bothAgree ? (
           <span style={{ fontSize: '11px', color: '#0D6B52', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             Both markets converge at {avgProb}% No change — high conviction signal

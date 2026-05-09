@@ -102,9 +102,14 @@ export default async function Home() {
   )
   const enrichedUseCase = { ...WARSH_ERA, events: enrichedEvents }
 
+  // Timestamp for all live sections
+  const lastUpdated = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false,
+  }) + ' UTC'
+
   const narrative = await generateNarrative({
-    useCaseTitle: 'The Warsh Era — Fed Chair Transition',
-    useCaseDescription: 'Kevin Warsh replacing Powell as Fed Chair. First FOMC meeting June 16-17. Warsh seen as hawkish and dollar-friendly. Oil above $100 keeping inflation elevated.',
+    useCaseTitle: 'The Warsh Effect — Fed Chair Transition',
+    useCaseDescription: 'Kevin Warsh replacing Powell as Fed Chair. First FOMC meeting June 16-17. Warsh seen as hawkish and dollar-friendly. Oil above $100 keeping inflation elevated. The Warsh Effect triggered the most violent single-day repricing of precious metals in decades.',
     predictionMarkets: Object.entries(CONDITION_IDS).map(([label, { conditionId }]) => ({
       label, probability: probabilities[conditionId] ?? 0
     })),
@@ -130,14 +135,8 @@ export default async function Home() {
       color: '#1a1a1a',
     }}>
 
-      {/* Sticky audio */}
       {narrative && <StickyAudioBriefing narrative={narrative} />}
-
-
-      {/* Masthead */}
       <Masthead />
-
-      {/* Solana Advantage · cream */}
       <SolanaAdvantageCard />
 
       {/* Timeline · white */}
@@ -145,18 +144,19 @@ export default async function Home() {
         <TimelineSection useCase={enrichedUseCase} noChangeProb={noChangeProb} />
       </div>
 
-            {/* Cross-Market View · white */}
-      <div style={{ backgroundColor: WHITE, padding: PAD }}>
+      {/* Cross-Market Intelligence · cream */}
+      <div style={{ backgroundColor: CREAM, padding: PAD }}>
         <CrossMarketTable
           tradfiMap={tradfiMap}
           changePctMap={changePctMap}
           solanaPrices={solanaPrices}
           pacificaMarkets={pacificaPerps}
+          lastUpdated={lastUpdated}
         />
       </div>
 
-      {/* Prediction Markets · cream */}
-      <div style={{ backgroundColor: CREAM, padding: PAD }}>
+      {/* Prediction Markets · white */}
+      <div style={{ backgroundColor: WHITE, padding: PAD }}>
         <PredictionMarketsSection
           polymarketOdds={Object.entries(CONDITION_IDS).map(([label, { conditionId }]) => ({
             label, probability: probabilities[conditionId] ?? 0
@@ -164,18 +164,26 @@ export default async function Home() {
           kalshiOdds={kalshiOdds}
           polyHistory={polyHistory}
           kalshiHistory={kalshiHistory}
+          lastUpdated={lastUpdated}
         />
       </div>
 
-      {/* Intelligence Brief · white */}
+      {/* Intelligence Brief · cream */}
       {narrative && (
-        <div style={{ backgroundColor: WHITE, padding: PAD }}>
+        <div style={{ backgroundColor: CREAM, padding: PAD }}>
           <div style={{
-            fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: '#6b6055', marginBottom: '20px', fontFamily: 'Georgia, serif',
-            borderTop: '2px solid #1a1a1a', paddingTop: '12px',
+            borderTop: '2px solid #1a1a1a', paddingTop: '12px', marginBottom: '20px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
           }}>
-            Intelligence Brief
+            <span style={{
+              fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: '#1a1a1a', fontFamily: 'Georgia, serif', fontWeight: 600,
+            }}>
+              Intelligence Brief
+            </span>
+            <span style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
+              AI synthesis · Gemini · generated {lastUpdated}
+            </span>
           </div>
           {narrative.split('\n\n').filter(p => p.trim()).map((paragraph, i) => (
             <p key={i} style={{
@@ -189,15 +197,15 @@ export default async function Home() {
         </div>
       )}
 
-
-      {/* SOL Macro Beta · cream */}
-      <div style={{ backgroundColor: CREAM, padding: PAD }}>
+      {/* SOL Macro Beta · white */}
+      <div style={{ backgroundColor: WHITE, padding: PAD }}>
         <SolBetaSection
           solHistory={solHistory}
           qqqHistory={qqqHistory}
           yieldHistory={yieldHistory}
           solPrice={solanaPrices[SOLANA_ASSETS.SOL]?.price ?? 0}
           solChange24h={solanaPrices[SOLANA_ASSETS.SOL]?.priceChange24h ?? 0}
+          lastUpdated={lastUpdated}
         />
       </div>
 
