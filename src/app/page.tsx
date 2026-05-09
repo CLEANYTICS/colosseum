@@ -1,24 +1,20 @@
 // src/app/page.tsx
 import { fetchEventProbabilities, fetchPolymarketNoChangeHistory } from '@/services/polymarket'
 import { fetchTradFiPrice, fetchTradFiHistory } from '@/services/tradfi'
-import { fetchSolanaPrices, XSTOCK_LIQUID, GOLD_ASSETS, INSTITUTIONAL_ASSETS, SOLANA_ASSETS } from '@/services/solana'
+import { fetchSolanaPrices, XSTOCK_LIQUID, SOLANA_ASSETS } from '@/services/solana'
 import { generateNarrative } from '@/services/llm'
-import { fetchTokenActivity } from '@/services/helius'
 import { fetchKalshiFedJuneOdds, fetchKalshiNoChangeHistory } from '@/services/kalshi'
+import { fetchPacificaPerps } from '@/services/pacifica'
 import { enrichEventReactions } from '@/lib/enrichEvents'
 import { WARSH_ERA } from '@/data/events'
 
 import Masthead from '@/components/Masthead'
 import StickyAudioBriefing from '@/components/StickyAudioBriefing'
+import SolanaAdvantageCard from '@/components/SolanaAdvantageCard'
 import TimelineSection from '@/components/TimelineSection'
 import PredictionMarketsSection from '@/components/PredictionMarketsSection'
-import MacroSensitivityTable from '@/components/MacroSensitivityTable'
-import DivergenceTable from '@/components/DivergenceTable'
-import InstitutionalBridgeTable from '@/components/InstitutionalBridgeTable'
+import CrossMarketTable from '@/components/CrossMarketTable'
 import SolBetaSection from '@/components/SolBetaSection'
-import SolanaActivityTable from '@/components/SolanaActivityTable'
-import SolanaAdvantageCard from '@/components/SolanaAdvantageCard'
-
 
 const CREAM = '#FFF1E5'
 const WHITE = '#FFFFFF'
@@ -51,35 +47,10 @@ const DIVERGENCE_ASSETS = [
   { id: 'qqqx', label: 'Nasdaq 100', ticker: 'QQQ', solanaMint: XSTOCK_LIQUID.QQQX, solanaLabel: 'QQQx', noiseThreshold: 0.3 },
 ]
 
-const INSTITUTIONAL_BRIDGE = [
-  {
-    id: 'buidl', label: 'BlackRock BUIDL',
-    solanaMint: SOLANA_ASSETS.BUIDL, solanaLabel: 'BUIDL',
-    context: 'On-chain tokenized treasury fund. Rising AUM signals institutions moving into on-chain yield as real rates stay high.',
-    liquidityNote: 'Institutional market — liquidity building',
-  },
-  {
-    id: 'gldx', label: 'GLD ETF',
-    solanaMint: INSTITUTIONAL_ASSETS.GLDX, solanaLabel: 'GLDX',
-    context: 'Tokenized gold ETF. Premium vs TradFi suggests on-chain markets pricing more inflation hedge demand than TradFi.',
-    liquidityNote: 'Emerging market — directional signal only',
-  },
-]
-
-const ACTIVITY_ASSETS = [
-  {
-    label: 'S&P 500',    mint: XSTOCK_LIQUID.SPYX, solanaLabel: 'SPYx',
-    macroContext: 'Broad equity on-chain flow. Rising transfers = investors repositioning around rate decision.',
-  },
-  {
-    label: 'Nasdaq 100', mint: XSTOCK_LIQUID.QQQX, solanaLabel: 'QQQx',
-    macroContext: 'Tech-heavy index. High wallet activity signals on-chain traders hedging rate-sensitive duration risk.',
-  },
-]
-
 const ALL_TICKERS = [...new Set([
   ...MACRO_ASSETS.map(a => a.ticker),
   ...DIVERGENCE_ASSETS.map(a => a.ticker),
+  'CL=F', 'EURUSD=X', 'JPY=X', 'SI=F',
 ])]
 
 export default async function Home() {
@@ -88,6 +59,7 @@ export default async function Home() {
     kalshiOdds,
     polyHistory,
     kalshiHistory,
+    pacificaPerps,
     solanaPrices,
     goldHistory,
     dxyHistory,
@@ -95,13 +67,13 @@ export default async function Home() {
     solHistory,
     qqqHistory,
     yieldHistory,
-    xstockActivity,
     ...tradfiPrices
   ] = await Promise.all([
     fetchEventProbabilities(FED_EVENT_SLUG),
     fetchKalshiFedJuneOdds(),
     fetchPolymarketNoChangeHistory(),
     fetchKalshiNoChangeHistory(),
+    fetchPacificaPerps(),
     fetchSolanaPrices(),
     fetchTradFiHistory('GC=F', '6mo'),
     fetchTradFiHistory('DX-Y.NYB', '6mo'),
@@ -109,7 +81,6 @@ export default async function Home() {
     fetchTradFiHistory('SOL-USD', '2mo'),
     fetchTradFiHistory('QQQ', '2mo'),
     fetchTradFiHistory('^TNX', '2mo'),
-    fetchTokenActivity({ SPYx: XSTOCK_LIQUID.SPYX, QQQx: XSTOCK_LIQUID.QQQX }),
     ...ALL_TICKERS.map(t => fetchTradFiPrice(t))
   ])
 
@@ -159,30 +130,35 @@ export default async function Home() {
       color: '#1a1a1a',
     }}>
 
+      {/* Sticky audio */}
       {narrative && <StickyAudioBriefing narrative={narrative} />}
+
+      {/* Masthead */}
       <Masthead useCaseTitle="The Warsh Era · Fed Chair Transition" />
+
+      {/* Solana Advantage · cream */}
       <SolanaAdvantageCard />
-      {/* 1 — Timeline · white */}
+
+      {/* Timeline · white */}
       <div style={{ backgroundColor: WHITE, padding: PAD }}>
         <TimelineSection useCase={enrichedUseCase} noChangeProb={noChangeProb} />
       </div>
 
-      {/* 2 — Divergence · cream */}
-      <div style={{ backgroundColor: CREAM, padding: PAD }}>
-        <DivergenceTable
-          assets={DIVERGENCE_ASSETS}
+            {/* Cross-Market View · white */}
+      <div style={{ backgroundColor: WHITE, padding: PAD }}>
+        <CrossMarketTable
           tradfiMap={tradfiMap}
           changePctMap={changePctMap}
           solanaPrices={solanaPrices}
+          pacificaMarkets={pacificaPerps}
         />
       </div>
 
-      {/* 3 — Prediction Markets · white */}
-      <div style={{ backgroundColor: WHITE, padding: PAD }}>
+      {/* Prediction Markets · cream */}
+      <div style={{ backgroundColor: CREAM, padding: PAD }}>
         <PredictionMarketsSection
           polymarketOdds={Object.entries(CONDITION_IDS).map(([label, { conditionId }]) => ({
-            label,
-            probability: probabilities[conditionId] ?? 0
+            label, probability: probabilities[conditionId] ?? 0
           }))}
           kalshiOdds={kalshiOdds}
           polyHistory={polyHistory}
@@ -190,9 +166,9 @@ export default async function Home() {
         />
       </div>
 
-      {/* 4 — Intelligence Brief · cream */}
+      {/* Intelligence Brief · white */}
       {narrative && (
-        <div style={{ backgroundColor: CREAM, padding: PAD }}>
+        <div style={{ backgroundColor: WHITE, padding: PAD }}>
           <div style={{
             fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase',
             color: '#6b6055', marginBottom: '20px', fontFamily: 'Georgia, serif',
@@ -212,41 +188,15 @@ export default async function Home() {
         </div>
       )}
 
-      {/* 5 — Macro Sensitivity · white */}
-      <div style={{ backgroundColor: WHITE, padding: PAD }}>
-        <MacroSensitivityTable
-          assets={MACRO_ASSETS}
-          tradfiMap={tradfiMap}
-          changePctMap={changePctMap}
-          events={enrichedUseCase.events}
-        />
-      </div>
 
-      {/* 6 — Institutional Bridge · cream */}
+      {/* SOL Macro Beta · cream */}
       <div style={{ backgroundColor: CREAM, padding: PAD }}>
-        <InstitutionalBridgeTable
-          assets={INSTITUTIONAL_BRIDGE}
-          solanaPrices={solanaPrices}
-        />
-      </div>
-
-      {/* 7 — SOL Macro Beta · white */}
-      <div style={{ backgroundColor: WHITE, padding: PAD }}>
         <SolBetaSection
           solHistory={solHistory}
           qqqHistory={qqqHistory}
           yieldHistory={yieldHistory}
           solPrice={solanaPrices[SOLANA_ASSETS.SOL]?.price ?? 0}
           solChange24h={solanaPrices[SOLANA_ASSETS.SOL]?.priceChange24h ?? 0}
-        />
-      </div>
-
-      {/* 8 — xStocks Pulse · cream */}
-      <div style={{ backgroundColor: CREAM, padding: PAD }}>
-        <SolanaActivityTable
-          assets={ACTIVITY_ASSETS}
-          activity={xstockActivity}
-          solanaPrices={solanaPrices}
         />
       </div>
 
@@ -258,7 +208,7 @@ export default async function Home() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: 'Georgia, serif',
       }}>
-        <span>Data: Polymarket · Kalshi · yfinance · Jupiter · Helius · Gemini AI · ElevenLabs</span>
+        <span>Data: Polymarket · Kalshi · Yahoo Finance · Jupiter · Pacifica · Helius · Gemini AI · ElevenLabs</span>
         <span style={{ color: '#9b8e80' }}>CLEANYTICS © 2026</span>
       </div>
 
