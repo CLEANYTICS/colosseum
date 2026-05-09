@@ -135,7 +135,7 @@ export default async function Home() {
 
 
       {/* Masthead */}
-      <Masthead useCaseTitle="The Warsh Era · Fed Chair Transition" />
+      <Masthead />
 
       {/* Solana Advantage · cream */}
       <SolanaAdvantageCard />

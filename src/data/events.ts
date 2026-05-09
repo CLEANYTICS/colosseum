@@ -38,7 +38,7 @@ export const WARSH_ERA: UseCase = {
       type: 'bearish_shock',
       assetReactions: [
         { ticker: 'GC=F',    label: 'Gold',   changePct: -11.4 },
-        { ticker: 'SI=F',    label: 'Silver',  changePct: -37.0 },
+        { ticker: 'SI=F',    label: 'Silver Futures',  changePct: -31.4 },
         { ticker: 'DX-Y.NYB',label: 'DXY',    changePct:  0.8 },
       ]
     },
