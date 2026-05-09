@@ -15,7 +15,7 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const paragraphs = narrative.split('\n\n').filter(p => p.trim()).map(p => p.replace(/\*\*/g, '').trim())
-  const firstSentence = paragraphs[0]?.split('.')[0] + '.' ?? ''
+  const firstSentence = (paragraphs[0]?.split('.')[0] ?? '') + '.'
   const previewText = firstSentence.length > 100 ? firstSentence.substring(0, 100) + '...' : firstSentence
 
   async function handleGenerate() {
