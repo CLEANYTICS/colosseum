@@ -1,0 +1,299 @@
+{
+  "id": "fed-warsh-2026",
+  "title": "Fed Chair Transition",
+  "subtitle": "Powell → Warsh",
+  "date": "2026-01-30",
+  "status": "live",
+  "description": "Kevin Warsh nominated to replace Jerome Powell as Fed Chair. Senate confirmation imminent. Powell term ends May 15th.",
+
+  "predictionMarkets": [
+    {
+      "id": "fed-june-cut-50",
+      "label": "Cut 50+ bps",
+      "assetType": "prediction_market",
+      "source": "polymarket",
+      "conditionId": "0x4e4a7df876b0c04f0b8b29b9073eddfbaf5c787192da825ae7ca1031bc8cfd15",
+      "displayGroup": "fed-june-decision",
+      "groupOrder": 0,
+      "context": {
+        "whyHere": "Extreme dovish tail — would signal Warsh caving to Trump pressure immediately",
+        "highProbabilityMeaning": "Market expects aggressive easing — dollar would weaken sharply, gold rallies",
+        "lowProbabilityMeaning": "Aggressive cut seen as unlikely given oil above $100",
+        "noiseThreshold": 1
+      }
+    },
+    {
+      "id": "fed-june-cut-25",
+      "label": "Cut 25 bps",
+      "assetType": "prediction_market",
+      "source": "polymarket",
+      "conditionId": "0xdde06286a7b9464d344f410ab0b3d2ebc6469904e72c27fd982f65fdbf78768d",
+      "displayGroup": "fed-june-decision",
+      "groupOrder": 1,
+      "context": {
+        "whyHere": "Dovish surprise scenario — Warsh signals rate cut path at first meeting",
+        "highProbabilityMeaning": "Dollar weakens, gold recovers, GLDX premium to spot increases",
+        "lowProbabilityMeaning": "Cut seen as unlikely while inflation elevated from Iran oil shock",
+        "noiseThreshold": 2
+      }
+    },
+    {
+      "id": "fed-june-no-change",
+      "label": "No change",
+      "assetType": "prediction_market",
+      "source": "polymarket",
+      "conditionId": "0xde04b189b3f19eaccda02529a3ea67abfc46bff5c0c8fc42d8a2d0ed7b8f0d41",
+      "displayGroup": "fed-june-decision",
+      "groupOrder": 2,
+      "context": {
+        "whyHere": "Base case — market consensus. Oil above $100 keeping inflation too elevated to move",
+        "highProbabilityMeaning": "Status quo — Warsh inherits Powell's stance, markets calm",
+        "lowProbabilityMeaning": "Something changed — watch tails for where market moved instead",
+        "noiseThreshold": 2
+      }
+    },
+    {
+      "id": "fed-june-hike-25",
+      "label": "Hike 25 bps",
+      "assetType": "prediction_market",
+      "source": "polymarket",
+      "conditionId": "0xa7cb4135c6d9c36da0e343874dd5b455de739c6d1b9f9f5583dd9320aacf5db2",
+      "displayGroup": "fed-june-decision",
+      "groupOrder": 3,
+      "context": {
+        "whyHere": "Hawkish surprise — Warsh establishes credibility by hiking on inflation concerns",
+        "highProbabilityMeaning": "Dollar strengthens sharply, gold falls, GLDX discount to spot widens",
+        "lowProbabilityMeaning": "Market doesn't expect Warsh to hike at first meeting",
+        "noiseThreshold": 1
+      }
+    },
+    {
+      "id": "fed-june-hike-50",
+      "label": "Hike 50+ bps",
+      "assetType": "prediction_market",
+      "source": "polymarket",
+      "conditionId": "0xb01e70a56199a6d5467f47a2b94e75e7c7218c128c8d0b8beb6dafed2f0d15c2",
+      "displayGroup": "fed-june-decision",
+      "groupOrder": 4,
+      "context": {
+        "whyHere": "Extreme hawkish tail — would be a major shock, last seen in 2022 inflation crisis",
+        "highProbabilityMeaning": "Severe dollar strength, gold crash, broad risk-off across all assets",
+        "lowProbabilityMeaning": "Extreme hike seen as virtually impossible given growth concerns",
+        "noiseThreshold": 1
+      }
+    }
+  ],
+
+  "divergencePairs": [
+    {
+      "id": "xaum-vs-gold",
+      "label": "Gold",
+      "tradfiAssetId": "gold-spot",
+      "solanaAssetId": "xaum-sol",
+      "context": {
+        "whyHere": "The purest cross-market gold comparison — physical gold on Solana vs spot gold futures. On Jan 30th gold crashed 11% after NYSE close. XAUm on Raydium was pricing that move in real time",
+        "discountMeaning": "On-chain markets leading TradFi gold repricing — Solana traders reacting faster than futures market",
+        "premiumMeaning": "On-chain gold demand outpacing spot — institutional capital moving to tokenized gold ahead of TradFi rally",
+        "noiseThreshold": 0.8
+      }
+    },
+    {
+      "id": "gldx-vs-gld",
+      "label": "Gold ETF",
+      "tradfiAssetId": "gld-etf",
+      "solanaAssetId": "gldx-sol",
+      "context": {
+        "whyHere": "Tokenized gold ETF — same story as spot gold but adds a Solana liquidity dimension. Wider discount than XAUm signals ETF holders more panicked than direct gold holders",
+        "discountMeaning": "On-chain gold ETF holders selling faster than TradFi — possible panic or leading indicator",
+        "premiumMeaning": "On-chain safe haven demand outpacing TradFi — institutional capital moving to tokenized gold",
+        "noiseThreshold": 0.5
+      }
+    },
+    {
+      "id": "spyx-vs-spy",
+      "label": "S&P 500",
+      "tradfiAssetId": "spy-etf",
+      "solanaAssetId": "spyx-sol",
+      "context": {
+        "whyHere": "Broad US equity market reaction to Fed regime change — hawkish shift raises discount rates hurting valuations",
+        "discountMeaning": "On-chain equity markets pricing more downside than TradFi — possible leading indicator or thin liquidity effect",
+        "premiumMeaning": "On-chain buyers more optimistic than TradFi — watch for spot catchup rally",
+        "noiseThreshold": 0.3
+      }
+    },
+    {
+      "id": "qqqx-vs-qqq",
+      "label": "Nasdaq 100",
+      "tradfiAssetId": "qqq-etf",
+      "solanaAssetId": "qqqx-sol",
+      "context": {
+        "whyHere": "Tech stocks most sensitive to rate path changes — high duration assets hurt most by hawkish Fed",
+        "discountMeaning": "On-chain tech exposure pricing more hawkish path than spot Nasdaq",
+        "premiumMeaning": "On-chain buyers front-running a tech recovery — watch for Nasdaq to follow",
+        "noiseThreshold": 0.3
+      }
+    }
+  ],
+
+  "tradfi": [
+    {
+      "id": "gold-spot",
+      "label": "Spot Gold",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "GC=F",
+      "context": {
+        "whyHere": "Primary safe haven for Fed regime shifts. Warsh is a known dollar hawk — stronger dollar expectations reduce global gold demand and raise real yields, both bearish for gold",
+        "bullishMeaning": "Market doubting Warsh hawkishness — or risk off demand overwhelming dollar strength",
+        "bearishMeaning": "Dollar strength and higher real yields weighing on gold — Warsh effect playing out",
+        "noiseThreshold": 0.5
+      }
+    },
+    {
+      "id": "silver-spot",
+      "label": "Spot Silver",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "SI=F",
+      "hasSolanaTwin": false,
+      "context": {
+        "whyHere": "Double sensitivity to Warsh — silver is both a monetary metal like gold AND an industrial metal. Crashed 37% vs gold's 11% on January 30th — amplified by dual driver selloff",
+        "bullishMeaning": "Industrial demand holding up — growth expectations resilient despite hawkish Fed",
+        "bearishMeaning": "Both monetary and industrial drivers bearish simultaneously — amplified selloff",
+        "noiseThreshold": 0.5
+      }
+    },
+    {
+      "id": "gld-etf",
+      "label": "GLD ETF",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "GLD",
+      "context": {
+        "whyHere": "SPDR Gold Shares ETF — institutional gold exposure benchmark. Has tokenized twin GLDX on Solana enabling direct divergence comparison",
+        "bullishMeaning": "Institutional gold demand resilient despite dollar strength",
+        "bearishMeaning": "ETF outflows signaling institutional gold exit — confirms Warsh hawkish repricing",
+        "noiseThreshold": 0.5
+      }
+    },
+    {
+      "id": "spy-etf",
+      "label": "S&P 500",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "^GSPC",
+      "context": {
+        "whyHere": "Broad equity market reaction to Fed chair change. Has tokenized twin SPYX on Solana — 24/7 trading means on-chain repricing visible outside NYSE hours",
+        "bullishMeaning": "Equity market shrugging off hawkish shift — earnings growth outweighing rate concerns",
+        "bearishMeaning": "Higher discount rate weighing on valuations — growth stocks most affected",
+        "noiseThreshold": 0.3
+      }
+    },
+    {
+      "id": "qqq-etf",
+      "label": "Nasdaq 100",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "QQQ",
+      "context": {
+        "whyHere": "Tech-heavy index most sensitive to rate path. Has tokenized twin QQQX on Solana with $2.9M DEX liquidity — most liquid xStock index pair",
+        "bullishMeaning": "Tech resilient — AI growth story outweighing rate headwinds",
+        "bearishMeaning": "High duration tech assets repricing lower on hawkish Fed path",
+        "noiseThreshold": 0.3
+      }
+    },
+    {
+      "id": "dxy",
+      "label": "DXY",
+      "assetType": "tradfi",
+      "source": "yfinance",
+      "ticker": "DX-Y.NYB",
+      "context": {
+        "whyHere": "The direct beneficiary of the Warsh effect. Dollar strength is the mechanism through which everything else moves — gold falls, emerging markets weaken, commodities reprice",
+        "bullishMeaning": "Dollar strengthening — Warsh hawkish expectations being priced in. Bearish for gold and commodities",
+        "bearishMeaning": "Dollar weakening despite Warsh — market doubting hawkishness or risk off overwhelming",
+        "noiseThreshold": 0.2
+      }
+    },
+    {
+      "id": "us10y",
+      "label": "US 10Y Yield",
+      "assetType": "tradfi",
+      "source": "fred",
+      "seriesId": "DGS10",
+      "context": {
+        "whyHere": "Rate path under Warsh is the core question. Rising 10Y yield confirms hawkish repricing — directly impacts gold via real yields and equities via discount rate",
+        "bullishMeaning": "Yields rising — Warsh hawkish expectations confirmed. Bearish for gold and growth stocks",
+        "bearishMeaning": "Yields falling despite Warsh — market pricing growth slowdown or policy reversal",
+        "noiseThreshold": 0.05
+      }
+    }
+  ],
+
+  "solana": [
+    {
+      "id": "xaum-sol",
+      "label": "XAUm",
+      "fullLabel": "Matrixdock Tokenized Gold",
+      "assetType": "solana",
+      "source": "jupiter",
+      "mintAddress": "5aLhp9VnUEKcsdtkfsf2DUgpJfomx7GmYVny24dHUZoB",
+      "marketCap": null,
+      "dexLiquidity": null,
+      "context": {
+        "whyHere": "Institutional grade tokenized gold on Solana — 1 troy ounce of LBMA physical gold per token. Launched February 2026 on Raydium. 24/7 trading means gold price discovery continues after TradFi closes",
+        "discountMeaning": "On-chain gold selling faster than spot — possible leading indicator or thin liquidity given recent launch",
+        "premiumMeaning": "Institutional demand for on-chain gold outpacing supply — watch for spot gold to follow",
+        "noiseThreshold": 0.8
+      }
+    },
+    {
+      "id": "gldx-sol",
+      "label": "GLDX",
+      "fullLabel": "Gold ETF xStock",
+      "assetType": "solana",
+      "source": "jupiter",
+      "mintAddress": "Xsv9hRk1z5ystj9MhnA7Lq4vjSsLwzL2nxrwmwtD3re",
+      "marketCap": 20282980,
+      "dexLiquidity": null,
+      "context": {
+        "whyHere": "Tokenized GLD ETF on Solana — institutional gold exposure on-chain. Wider discount than XAUm signals ETF holders more panicked than direct gold holders",
+        "discountMeaning": "On-chain gold ETF selling faster than TradFi — amplified panic or leading indicator",
+        "premiumMeaning": "Institutional capital moving to tokenized gold on-chain",
+        "noiseThreshold": 0.5
+      }
+    },
+    {
+      "id": "spyx-sol",
+      "label": "SPYX",
+      "fullLabel": "S&P 500 xStock",
+      "assetType": "solana",
+      "source": "jupiter",
+      "mintAddress": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+      "marketCap": 10500000,
+      "dexLiquidity": 929700,
+      "context": {
+        "whyHere": "Tokenized S&P 500 on Solana — trades 24/7 unlike NYSE. On Jan 30th after 4pm ET when NYSE closed, SPYX was already reflecting the Warsh announcement in real time",
+        "discountMeaning": "On-chain equity markets pricing more downside than TradFi — possible leading indicator",
+        "premiumMeaning": "On-chain buyers more optimistic — watch for spot catchup",
+        "noiseThreshold": 0.3
+      }
+    },
+    {
+      "id": "qqqx-sol",
+      "label": "QQQX",
+      "fullLabel": "Nasdaq 100 xStock",
+      "assetType": "solana",
+      "source": "jupiter",
+      "mintAddress": "Xs8S1uUs1zvS2p7iwtsG3b6fkhpvmwz4GYU3gWAmWHZ",
+      "marketCap": 34900000,
+      "dexLiquidity": 2900000,
+      "context": {
+        "whyHere": "Most liquid xStock index on Solana with $2.9M DEX liquidity — reliable divergence signal. Tech stocks most sensitive to Warsh rate path",
+        "discountMeaning": "On-chain tech pricing more hawkish path — possible leading indicator for Nasdaq selloff",
+        "premiumMeaning": "On-chain buyers front-running tech recovery",
+        "noiseThreshold": 0.3
+      }
+    }
+  ]
+}

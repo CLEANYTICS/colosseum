@@ -1,5 +1,5 @@
 // src/services/llm.ts
-console.log('GEMINI_KEY loaded:', process.env.GEMINI_KEY ? 'YES' : 'NO - EMPTY')
+
 export interface NarrativeInput {
   useCaseTitle: string
   useCaseDescription: string
@@ -9,9 +9,10 @@ export interface NarrativeInput {
   solCorrelations?: { vsNasdaq: number | null; vsYield: number | null }
 }
 
-const GEMINI_KEY = process.env.GEMINI_KEY ?? ''
-
 async function callGemini(prompt: string, model: string): Promise<string> {
+  const GEMINI_KEY = process.env.GEMINI_KEY ?? ''
+  console.log('Key being used:', GEMINI_KEY.substring(0, 15) + '...')
+
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
     {
@@ -25,7 +26,6 @@ async function callGemini(prompt: string, model: string): Promise<string> {
           thinkingConfig: { thinkingBudget: 0 }
         }
       }),
-      next: { revalidate: 300 }
     }
   )
 

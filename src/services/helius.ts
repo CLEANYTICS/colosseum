@@ -2,7 +2,7 @@
 
 const HELIUS_API = 'https://api.helius.xyz/v0'
 const HELIUS_RPC = 'https://mainnet.helius-rpc.com'
-const API_KEY = '30b3e94c-dfc7-43df-a1ef-81401254f52a' 
+const API_KEY = process.env.HELIUS_API_KEY ?? ''
 
 export interface TokenActivity {
   mint: string
