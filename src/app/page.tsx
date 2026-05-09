@@ -209,7 +209,7 @@ export default async function Home() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: 'Georgia, serif',
       }}>
-        <span>Data: Polymarket · Kalshi · Yahoo Finance · Jupiter · Pacifica · Helius · Gemini AI · ElevenLabs</span>
+        <span>Data: Polymarket · Kalshi · Yahoo Finance · Jupiter · Pacifica · Helius · Gemini AI · ElevenLabs · <a href="/api/signals" target="_blank" style={{ color: '#6b6055', textDecoration: 'underline' }}>API</a></span>
         <span style={{ color: '#9b8e80' }}>CLEANYTICS © 2026</span>
       </div>
 
