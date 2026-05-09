@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SolanaAssetData } from '@/services/solana'
 import { PacificaMarket } from '@/services/pacifica'
 
@@ -17,21 +17,18 @@ interface CrossMarketAsset {
   label: string
   category: 'equities' | 'commodities' | 'fx'
   sentiment: 'bullish' | 'bearish' | 'watch'
-  // TradFi
   tradfiTicker?: string
-  // Solana Spot
   solanaMint?: string
   solanaSpotLabel?: string
   jupiterPair?: string
-  // Solana Perp
   pacificaSymbol?: string
   pacificaUrl?: string
-  // Gap
   showGap: boolean
-  // Expandable content
   watchNote: string
   historicalReactions: HistoricalReaction[]
 }
+
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 
 const ASSETS: CrossMarketAsset[] = [
   {
@@ -108,12 +105,121 @@ const SENTIMENT_COLORS = {
   watch: '#b07d00',
 }
 
-const JUPITER_REFERRAL = process.env.NEXT_PUBLIC_JUPITER_REFERRAL ?? ''
-
 function formatPrice(p: number): string {
   if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 2 })
   if (p >= 10) return p.toFixed(2)
   return p.toFixed(4)
+}
+
+declare global {
+  interface Window { Jupiter: any }
+}
+
+function JupiterModal({ asset, onClose }: {
+  asset: CrossMarketAsset
+  onClose: () => void
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const initialized = useRef(false)
+  const containerId = `jupiter-modal-${asset.id}`
+
+  useEffect(() => {
+    function init() {
+      if (!window.Jupiter || initialized.current) return
+      initialized.current = true
+      window.Jupiter.init({
+        displayMode: 'integrated',
+        integratedTargetId: containerId,
+        formProps: {
+          initialInputMint: USDC_MINT,
+          initialOutputMint: asset.solanaMint,
+        },
+      })
+    }
+
+    if (window.Jupiter) {
+      setTimeout(init, 50)
+    } else if (!document.getElementById('jupiter-plugin-script')) {
+      const script = document.createElement('script')
+      script.id = 'jupiter-plugin-script'
+      script.src = 'https://plugin.jup.ag/plugin-v1.js'
+      script.setAttribute('data-preload', '')
+      script.defer = true
+      script.onload = () => setTimeout(init, 50)
+      document.head.appendChild(script)
+    } else {
+      const interval = setInterval(() => {
+        if (window.Jupiter) { clearInterval(interval); setTimeout(init, 50) }
+      }, 200)
+    }
+  }, [asset.solanaMint, containerId])
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        backgroundColor: 'rgba(26, 26, 26, 0.7)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          backgroundColor: '#FFF1E5',
+          width: '100%', maxWidth: '420px',
+          fontFamily: 'Georgia, serif',
+          position: 'relative',
+        }}
+      >
+        {/* Modal header */}
+        <div style={{
+          borderTop: '2px solid #1a1a1a',
+          padding: '16px 20px 12px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+          borderBottom: '1px solid #e8e2d6',
+        }}>
+          <div>
+            <div style={{ fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#9b8e80', marginBottom: '4px' }}>
+              Trade on Solana
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#1a1a1a' }}>
+              {asset.solanaSpotLabel ?? asset.label}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none',
+              fontSize: '11px', color: '#9b8e80',
+              cursor: 'pointer', fontFamily: 'Georgia, serif',
+              letterSpacing: '0.05em',
+            }}
+          >
+            close
+          </button>
+        </div>
+
+        {/* Jupiter widget */}
+        <div
+          id={containerId}
+          ref={containerRef}
+          style={{ width: '100%', minHeight: '380px' }}
+        />
+
+        {/* Modal footer */}
+        <div style={{
+          padding: '10px 20px',
+          borderTop: '1px solid #e8e2d6',
+          fontSize: '9px', color: '#9b8e80', fontStyle: 'italic',
+        }}>
+          Powered by Jupiter · 0.5% platform fee via CLEANYTICS · Not financial advice
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function CrossMarketTable({
@@ -129,6 +235,7 @@ export default function CrossMarketTable({
 }) {
   const [category, setCategory] = useState<Category>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [tradeAsset, setTradeAsset] = useState<CrossMarketAsset | null>(null)
 
   const pacificaMap = Object.fromEntries(pacificaMarkets.map(m => [m.symbol, m]))
 
@@ -150,289 +257,294 @@ export default function CrossMarketTable({
   ]
 
   return (
-    <div style={{ marginBottom: '0' }}>
+    <>
+      {/* Jupiter trade modal */}
+      {tradeAsset && (
+        <JupiterModal asset={tradeAsset} onClose={() => setTradeAsset(null)} />
+      )}
 
-      {/* Section header */}
-      <div style={{
-        borderTop: '2px solid #1a1a1a', paddingTop: '12px', marginBottom: '20px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
-        <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#1a1a1a', fontFamily: 'Georgia, serif', fontWeight: 600 }}>
-          Cross-Market Intelligence
-        </span>
-        <span style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
-          TradFi · Solana Spot · Solana Perps · click any row
-        </span>
-      </div>
+      <div style={{ marginBottom: '0' }}>
 
-      {/* Filter bar */}
-      <div style={{ display: 'flex', gap: '0', marginBottom: '16px' }}>
-        {CATEGORY_FILTERS.map((f, i) => (
-          <button
-            key={f.id}
-            onClick={() => setCategory(f.id)}
-            style={{
-              background: 'none',
-              border: '1px solid #ccc5b5',
-              borderRight: i < CATEGORY_FILTERS.length - 1 ? 'none' : '1px solid #ccc5b5',
-              padding: '5px 14px',
-              fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: category === f.id ? '#fff' : '#9b8e80',
-              backgroundColor: category === f.id ? '#1a1a1a' : 'transparent',
-              cursor: 'pointer', fontFamily: 'Georgia, serif', transition: 'all 0.15s',
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+        {/* Section header */}
+        <div style={{
+          borderTop: '2px solid #1a1a1a', paddingTop: '12px', marginBottom: '20px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#1a1a1a', fontFamily: 'Georgia, serif', fontWeight: 600 }}>
+            Cross-Market Intelligence
+          </span>
+          <span style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
+            TradFi · Solana Spot · Solana Perps · click any row
+          </span>
+        </div>
 
-      {/* Column headers */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '130px 120px 160px 160px 90px 20px',
-        gap: '16px', paddingBottom: '8px',
-        fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
-        color: '#9b8e80', borderBottom: '1px solid #ccc5b5', fontFamily: 'Georgia, serif',
-      }}>
-        <span>Asset</span>
-        <span>TradFi</span>
-        <span style={{ color: '#0D6B52' }}>Solana Spot</span>
-        <span style={{ color: '#0D6B52' }}>Solana Perp</span>
-        <span>Gap</span>
-        <span />
-      </div>
-
-      {/* Rows */}
-      {filtered.map((asset, idx) => {
-        const isExpanded = expandedId === asset.id
-        const tradfiPos = (asset.tradfiChangePct ?? 0) >= 0
-        const solanaSpotPos = (asset.solanaSpotData?.priceChange24h ?? 0) >= 0
-        const pacificaPos = (asset.pacificaData?.changePct ?? 0) >= 0
-        const sentimentColor = SENTIMENT_COLORS[asset.sentiment]
-
-        // Gap
-        let gapPct: number | null = null
-        let gapLabel = ''
-        if (asset.showGap) {
-          const tradfi = asset.tradfiPrice
-          const solana = asset.solanaSpotData?.price ?? asset.pacificaData?.mark ?? null
-          if (tradfi && solana) {
-            gapPct = ((solana - tradfi) / tradfi) * 100
-            gapLabel = gapPct >= 0 ? 'premium' : 'discount'
-          }
-        }
-
-        return (
-          <div key={asset.id}>
-            {/* Main row */}
-            <div
-              onClick={() => setExpandedId(isExpanded ? null : asset.id)}
+        {/* Filter bar */}
+        <div style={{ display: 'flex', gap: '0', marginBottom: '16px' }}>
+          {CATEGORY_FILTERS.map((f, i) => (
+            <button
+              key={f.id}
+              onClick={() => setCategory(f.id)}
               style={{
-                display: 'grid', gridTemplateColumns: '130px 120px 160px 160px 90px 20px',
-                gap: '16px', padding: '14px 0',
-                borderBottom: !isExpanded ? (idx < filtered.length - 1 ? '1px solid #e8e2d6' : 'none') : 'none',
-                alignItems: 'center', cursor: 'pointer',
-                borderLeft: `2px solid ${isExpanded ? sentimentColor : 'transparent'}`,
-                paddingLeft: isExpanded ? '10px' : '0',
-                transition: 'all 0.15s',
+                background: 'none',
+                border: '1px solid #ccc5b5',
+                borderRight: i < CATEGORY_FILTERS.length - 1 ? 'none' : '1px solid #ccc5b5',
+                padding: '5px 14px',
+                fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: category === f.id ? '#fff' : '#9b8e80',
+                backgroundColor: category === f.id ? '#1a1a1a' : 'transparent',
+                cursor: 'pointer', fontFamily: 'Georgia, serif', transition: 'all 0.15s',
               }}
             >
-              {/* Asset */}
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: isExpanded ? sentimentColor : '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                  {asset.label}
-                </div>
-                <div style={{ fontSize: '9px', color: '#9b8e80', marginTop: '2px', fontFamily: 'Georgia, serif', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                  {asset.category}
-                </div>
-              </div>
+              {f.label}
+            </button>
+          ))}
+        </div>
 
-              {/* TradFi */}
-              <div>
-                {asset.tradfiPrice ? (
-                  <>
-                    <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                      {formatPrice(asset.tradfiPrice)}
-                    </div>
-                    {asset.tradfiChangePct !== undefined && (
-                      <div style={{ fontSize: '10px', marginTop: '2px', color: tradfiPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
-                        {tradfiPos ? '▲' : '▼'} {Math.abs(asset.tradfiChangePct).toFixed(2)}%
-                      </div>
-                    )}
-                  </>
-                ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
-              </div>
+        {/* Column headers */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '130px 120px 160px 160px 90px 20px',
+          gap: '16px', paddingBottom: '8px',
+          fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: '#9b8e80', borderBottom: '1px solid #ccc5b5', fontFamily: 'Georgia, serif',
+        }}>
+          <span>Asset</span>
+          <span>TradFi</span>
+          <span style={{ color: '#0D6B52' }}>Solana Spot</span>
+          <span style={{ color: '#0D6B52' }}>Solana Perp</span>
+          <span>Gap</span>
+          <span />
+        </div>
 
-              {/* Solana Spot */}
-              <div>
-                {asset.solanaSpotData ? (
-                  <>
-                    <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                      {formatPrice(asset.solanaSpotData.price)}
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#0D6B52', marginTop: '2px', fontFamily: 'Georgia, serif' }}>
-                      {asset.solanaSpotLabel} · spot
-                    </div>
-                    {asset.solanaSpotData.priceChange24h !== null && (
-                      <div style={{ fontSize: '10px', color: solanaSpotPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
-                        {solanaSpotPos ? '▲' : '▼'} {Math.abs(asset.solanaSpotData.priceChange24h).toFixed(2)}%
-                      </div>
-                    )}
-                  </>
-                ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
-              </div>
+        {filtered.map((asset, idx) => {
+          const isExpanded = expandedId === asset.id
+          const tradfiPos = (asset.tradfiChangePct ?? 0) >= 0
+          const solanaSpotPos = (asset.solanaSpotData?.priceChange24h ?? 0) >= 0
+          const pacificaPos = (asset.pacificaData?.changePct ?? 0) >= 0
+          const sentimentColor = SENTIMENT_COLORS[asset.sentiment]
 
-              {/* Solana Perp */}
-              <div>
-                {asset.pacificaData ? (
-                  <>
-                    <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
-                      {formatPrice(asset.pacificaData.mark)}
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#0D6B52', marginTop: '2px', fontFamily: 'Georgia, serif' }}>
-                      {asset.pacificaSymbol} · perp · 10x
-                    </div>
-                    <div style={{ fontSize: '10px', color: pacificaPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
-                      {pacificaPos ? '▲' : '▼'} {Math.abs(asset.pacificaData.changePct).toFixed(2)}%
-                    </div>
-                  </>
-                ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
-              </div>
+          let gapPct: number | null = null
+          let gapLabel = ''
+          if (asset.showGap) {
+            const tradfi = asset.tradfiPrice
+            const solana = asset.solanaSpotData?.price ?? asset.pacificaData?.mark ?? null
+            if (tradfi && solana) {
+              gapPct = ((solana - tradfi) / tradfi) * 100
+              gapLabel = gapPct >= 0 ? 'premium' : 'discount'
+            }
+          }
 
-              {/* Gap */}
-              <div>
-                {gapPct !== null ? (
-                  <>
-                    <div style={{
-                      fontSize: '13px', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
-                      color: Math.abs(gapPct) < 0.3 ? '#9b8e80' : gapPct >= 0 ? '#0D6B52' : '#c0392b',
-                      fontFamily: 'Georgia, serif',
-                    }}>
-                      {gapPct >= 0 ? '+' : ''}{gapPct.toFixed(2)}%
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
-                      {gapLabel}
-                    </div>
-                  </>
-                ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
-              </div>
-
-              {/* Expand toggle */}
-              <div style={{ fontSize: '12px', color: '#9b8e80', fontFamily: 'Georgia, serif', textAlign: 'right' }}>
-                {isExpanded ? '↑' : '↓'}
-              </div>
-            </div>
-
-            {/* Expanded panel */}
-            {isExpanded && (
-              <div style={{
-                borderTop: `1px solid ${sentimentColor}22`,
-                borderBottom: idx < filtered.length - 1 ? '1px solid #e8e2d6' : 'none',
-                backgroundColor: '#faf9f7',
-                padding: '20px 0 20px 12px',
-                display: 'grid', gridTemplateColumns: '1fr 1fr',
-                gap: '32px',
-              }}>
-                {/* Left — thesis */}
+          return (
+            <div key={asset.id}>
+              {/* Main row */}
+              <div
+                onClick={() => setExpandedId(isExpanded ? null : asset.id)}
+                style={{
+                  display: 'grid', gridTemplateColumns: '130px 120px 160px 160px 90px 20px',
+                  gap: '16px', padding: '14px 0',
+                  borderBottom: !isExpanded ? (idx < filtered.length - 1 ? '1px solid #e8e2d6' : 'none') : 'none',
+                  alignItems: 'center', cursor: 'pointer',
+                  borderLeft: `2px solid ${isExpanded ? sentimentColor : 'transparent'}`,
+                  paddingLeft: isExpanded ? '10px' : '0',
+                  transition: 'all 0.15s',
+                }}
+              >
                 <div>
-                  <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9b8e80', fontFamily: 'Georgia, serif', marginBottom: '10px' }}>
-                    What to watch · {asset.label}
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: isExpanded ? sentimentColor : '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                    {asset.label}
                   </div>
-                  <p style={{ fontSize: '13px', color: '#4a4035', fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: '0 0 16px' }}>
-                    {asset.watchNote}
-                  </p>
-
-                  {/* Historical reactions */}
-                  {asset.historicalReactions.length > 0 && (
-                    <>
-                      <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9b8e80', fontFamily: 'Georgia, serif', marginBottom: '10px', paddingTop: '12px', borderTop: '1px solid #e8e2d6' }}>
-                        Warsh era signal · how it already reacted
-                      </div>
-                      {asset.historicalReactions.map((r, i) => (
-                        <div key={i} style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '8px 0', borderBottom: '1px solid #e8e2d6',
-                        }}>
-                          <div>
-                            <div style={{ fontSize: '11px', fontWeight: 600, fontFamily: 'Georgia, serif', color: '#1a1a1a' }}>{r.eventLabel}</div>
-                            <div style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>{r.eventDate}</div>
-                          </div>
-                          <div style={{ fontSize: '18px', fontWeight: 700, color: r.changePct >= 0 ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif', fontVariantNumeric: 'tabular-nums' }}>
-                            {r.changePct >= 0 ? '+' : ''}{r.changePct}%
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
+                  <div style={{ fontSize: '9px', color: '#9b8e80', marginTop: '2px', fontFamily: 'Georgia, serif', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    {asset.category}
+                  </div>
                 </div>
 
-                {/* Right — act on it */}
-                <div style={{ borderLeft: '1px solid #e8e2d6', paddingLeft: '32px' }}>
-                  <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#0D6B52', fontFamily: 'Georgia, serif', marginBottom: '12px' }}>
-                    Act on this signal · Solana
-                  </div>
+                <div>
+                  {asset.tradfiPrice ? (
+                    <>
+                      <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                        {formatPrice(asset.tradfiPrice)}
+                      </div>
+                      {asset.tradfiChangePct !== undefined && (
+                        <div style={{ fontSize: '10px', marginTop: '2px', color: tradfiPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
+                          {tradfiPos ? '▲' : '▼'} {Math.abs(asset.tradfiChangePct).toFixed(2)}%
+                        </div>
+                      )}
+                    </>
+                  ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
+                </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {/* Jupiter spot swap */}
-                    {asset.jupiterPair && (
-                      <a
-                        href={`https://jup.ag/swap/${asset.jupiterPair}${JUPITER_REFERRAL ? `?referrer=${JUPITER_REFERRAL}&feeBps=50` : ''}`}
-                        target="_blank" rel="noopener noreferrer"
-                        style={{
-                          display: 'block', padding: '10px 16px', textAlign: 'center',
-                          backgroundColor: '#1a1a1a', color: '#fff',
-                          fontSize: '11px', fontWeight: 600, fontFamily: 'Georgia, serif',
-                          textDecoration: 'none', letterSpacing: '0.05em',
-                        }}
-                      >
-                        Swap {asset.solanaSpotLabel} on Jupiter →
-                      </a>
-                    )}
+                <div>
+                  {asset.solanaSpotData ? (
+                    <>
+                      <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                        {formatPrice(asset.solanaSpotData.price)}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#0D6B52', marginTop: '2px', fontFamily: 'Georgia, serif' }}>
+                        {asset.solanaSpotLabel} · spot
+                      </div>
+                      {asset.solanaSpotData.priceChange24h !== null && (
+                        <div style={{ fontSize: '10px', color: solanaSpotPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
+                          {solanaSpotPos ? '▲' : '▼'} {Math.abs(asset.solanaSpotData.priceChange24h).toFixed(2)}%
+                        </div>
+                      )}
+                    </>
+                  ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
+                </div>
 
-                    {/* Pacifica perp */}
-                    {asset.pacificaUrl && (
-                      <a
-                        href={asset.pacificaUrl}
-                        target="_blank" rel="noopener noreferrer"
-                        style={{
-                          display: 'block', padding: '10px 16px', textAlign: 'center',
-                          backgroundColor: 'transparent', color: '#1a1a1a',
-                          border: '1px solid #1a1a1a',
-                          fontSize: '11px', fontWeight: 600, fontFamily: 'Georgia, serif',
-                          textDecoration: 'none', letterSpacing: '0.05em',
-                        }}
-                      >
-                        Trade {asset.pacificaSymbol} perp on Pacifica →
-                      </a>
-                    )}
-                  </div>
+                <div>
+                  {asset.pacificaData ? (
+                    <>
+                      <div style={{ fontSize: '13px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#1a1a1a', fontFamily: 'Georgia, serif' }}>
+                        {formatPrice(asset.pacificaData.mark)}
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#0D6B52', marginTop: '2px', fontFamily: 'Georgia, serif' }}>
+                        {asset.pacificaSymbol} · perp · 10x
+                      </div>
+                      <div style={{ fontSize: '10px', color: pacificaPos ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif' }}>
+                        {pacificaPos ? '▲' : '▼'} {Math.abs(asset.pacificaData.changePct).toFixed(2)}%
+                      </div>
+                    </>
+                  ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
+                </div>
 
-                  {asset.jupiterPair && (
-                    <div style={{ fontSize: '9px', color: '#9b8e80', fontFamily: 'Georgia, serif', marginTop: '8px', fontStyle: 'italic' }}>
-                      Spot via Jupiter · 0.5% platform fee
-                    </div>
-                  )}
-                  {asset.pacificaUrl && (
-                    <div style={{ fontSize: '9px', color: '#9b8e80', fontFamily: 'Georgia, serif', marginTop: '4px', fontStyle: 'italic' }}>
-                      Perps via Pacifica · up to 10x leverage · not financial advice
-                    </div>
-                  )}
+                <div>
+                  {gapPct !== null ? (
+                    <>
+                      <div style={{
+                        fontSize: '13px', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+                        color: Math.abs(gapPct) < 0.3 ? '#9b8e80' : gapPct >= 0 ? '#0D6B52' : '#c0392b',
+                        fontFamily: 'Georgia, serif',
+                      }}>
+                        {gapPct >= 0 ? '+' : ''}{gapPct.toFixed(2)}%
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>
+                        {gapLabel}
+                      </div>
+                    </>
+                  ) : <div style={{ fontSize: '11px', color: '#ccc5b5', fontFamily: 'Georgia, serif' }}>—</div>}
+                </div>
+
+                <div style={{ fontSize: '12px', color: '#9b8e80', textAlign: 'right' }}>
+                  {isExpanded ? '↑' : '↓'}
                 </div>
               </div>
-            )}
-          </div>
-        )
-      })}
 
-      {/* Footer */}
-      <div style={{
-        paddingTop: '12px', borderTop: '1px solid #e8e2d6',
-        display: 'flex', justifyContent: 'space-between',
-        fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif', fontStyle: 'italic',
-      }}>
-        <span>Spot via Jupiter · Perps via Pacifica · TradFi via Yahoo Finance</span>
-        <span>Gap = Solana vs TradFi · not financial advice</span>
+              {/* Expanded panel */}
+              {isExpanded && (
+                <div style={{
+                  borderTop: `1px solid ${sentimentColor}22`,
+                  borderBottom: idx < filtered.length - 1 ? '1px solid #e8e2d6' : 'none',
+                  backgroundColor: '#faf9f7',
+                  padding: '20px 0 20px 12px',
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  gap: '32px',
+                }}>
+                  {/* Left — thesis */}
+                  <div>
+                    <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9b8e80', fontFamily: 'Georgia, serif', marginBottom: '10px' }}>
+                      What to watch · {asset.label}
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#4a4035', fontFamily: 'Georgia, serif', lineHeight: 1.7, margin: '0 0 16px' }}>
+                      {asset.watchNote}
+                    </p>
+
+                    {asset.historicalReactions.length > 0 && (
+                      <>
+                        <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#9b8e80', fontFamily: 'Georgia, serif', marginBottom: '10px', paddingTop: '12px', borderTop: '1px solid #e8e2d6' }}>
+                          Warsh era signal · how it already reacted
+                        </div>
+                        {asset.historicalReactions.map((r, i) => (
+                          <div key={i} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '8px 0', borderBottom: '1px solid #e8e2d6',
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '11px', fontWeight: 600, fontFamily: 'Georgia, serif', color: '#1a1a1a' }}>{r.eventLabel}</div>
+                              <div style={{ fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif' }}>{r.eventDate}</div>
+                            </div>
+                            <div style={{ fontSize: '18px', fontWeight: 700, color: r.changePct >= 0 ? '#0D6B52' : '#c0392b', fontFamily: 'Georgia, serif', fontVariantNumeric: 'tabular-nums' }}>
+                              {r.changePct >= 0 ? '+' : ''}{r.changePct}%
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Right — Trade */}
+                  <div style={{ borderLeft: '1px solid #e8e2d6', paddingLeft: '32px' }}>
+                    <div style={{ fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#1a1a1a', fontFamily: 'Georgia, serif', marginBottom: '16px' }}>
+                      Trade
+                    </div>
+
+                    {/* Jupiter spot swap button */}
+                    {asset.solanaMint && (
+                      <div style={{ marginBottom: asset.pacificaUrl ? '16px' : '0' }}>
+                        <div style={{ fontSize: '11px', color: '#4a4035', fontFamily: 'Georgia, serif', marginBottom: '10px', lineHeight: 1.6 }}>
+                          {asset.solanaSpotLabel} trades on Solana — same exposure as {asset.label}, 24/7, instant settlement.
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setTradeAsset(asset) }}
+                          style={{
+                            width: '100%', padding: '11px 16px',
+                            backgroundColor: '#1a1a1a', color: '#fff',
+                            border: 'none',
+                            fontSize: '11px', fontWeight: 600,
+                            fontFamily: 'Georgia, serif', letterSpacing: '0.08em',
+                            textTransform: 'uppercase', cursor: 'pointer',
+                          }}
+                        >
+                          Swap {asset.solanaSpotLabel} on Jupiter
+                        </button>
+                        <div style={{ fontSize: '9px', color: '#9b8e80', fontFamily: 'Georgia, serif', marginTop: '6px', fontStyle: 'italic' }}>
+                          0.5% platform fee via CLEANYTICS
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pacifica perp link */}
+                    {asset.pacificaUrl && (
+                      <div style={{ borderTop: asset.solanaMint ? '1px solid #e8e2d6' : 'none', paddingTop: asset.solanaMint ? '16px' : '0' }}>
+                        <div style={{ fontSize: '11px', color: '#4a4035', fontFamily: 'Georgia, serif', marginBottom: '10px', lineHeight: 1.6 }}>
+                          {asset.pacificaSymbol} perp on Pacifica — up to 10x leverage, 24/7.
+                        </div>
+                        <a
+                          href={asset.pacificaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            display: 'block', padding: '11px 16px', textAlign: 'center',
+                            backgroundColor: 'transparent', color: '#1a1a1a',
+                            border: '1px solid #1a1a1a',
+                            fontSize: '11px', fontWeight: 600,
+                            fontFamily: 'Georgia, serif', textDecoration: 'none',
+                            letterSpacing: '0.08em', textTransform: 'uppercase',
+                          }}
+                        >
+                          Open {asset.pacificaSymbol} on Pacifica
+                        </a>
+                        <div style={{ fontSize: '9px', color: '#9b8e80', fontFamily: 'Georgia, serif', marginTop: '6px', fontStyle: 'italic' }}>
+                          Not financial advice
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Footer */}
+        <div style={{
+          paddingTop: '12px', borderTop: '1px solid #e8e2d6',
+          display: 'flex', justifyContent: 'space-between',
+          fontSize: '10px', color: '#9b8e80', fontFamily: 'Georgia, serif', fontStyle: 'italic',
+        }}>
+          <span>Spot via Jupiter · Perps via Pacifica · TradFi via Yahoo Finance</span>
+          <span>Gap = Solana vs TradFi · not financial advice</span>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

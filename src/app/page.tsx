@@ -133,6 +133,7 @@ export default async function Home() {
       {/* Sticky audio */}
       {narrative && <StickyAudioBriefing narrative={narrative} />}
 
+
       {/* Masthead */}
       <Masthead useCaseTitle="The Warsh Era · Fed Chair Transition" />
 
