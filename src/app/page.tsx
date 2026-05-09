@@ -17,6 +17,8 @@ import DivergenceTable from '@/components/DivergenceTable'
 import InstitutionalBridgeTable from '@/components/InstitutionalBridgeTable'
 import SolBetaSection from '@/components/SolBetaSection'
 import SolanaActivityTable from '@/components/SolanaActivityTable'
+import SolanaAdvantageCard from '@/components/SolanaAdvantageCard'
+
 
 const CREAM = '#FFF1E5'
 const WHITE = '#FFFFFF'
@@ -159,7 +161,7 @@ export default async function Home() {
 
       {narrative && <StickyAudioBriefing narrative={narrative} />}
       <Masthead useCaseTitle="The Warsh Era · Fed Chair Transition" />
-
+      <SolanaAdvantageCard />
       {/* 1 — Timeline · white */}
       <div style={{ backgroundColor: WHITE, padding: PAD }}>
         <TimelineSection useCase={enrichedUseCase} noChangeProb={noChangeProb} />
