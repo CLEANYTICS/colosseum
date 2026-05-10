@@ -18,19 +18,19 @@ CLEANYTICS exists because macro events don't wait for market hours. It connects 
 
 ## What It Does
 
-**Cross-Market Intelligence Table** — live comparison of TradFi prices, Solana spot (via Jupiter), and Solana perps (via Pacifica) for equities, commodities, and FX. Shows real-time premium/discount gaps where Solana diverges from TradFi.
+**Cross-Market Intelligence Table** live comparison of TradFi prices, Solana spot (via Jupiter), and Solana perps (via Pacifica) for equities, commodities, and FX. Shows real-time premium/discount gaps where Solana diverges from TradFi.
 
-**Narrative Timeline** — the Warsh Effect story told through macro events, with market reactions on expand. From the Jan 30 nomination through the June FOMC.
+**Narrative Timeline** the Warsh Effect story told through macro events, with market reactions on expand. From the Jan 30 nomination through the June FOMC.
 
-**Prediction Markets** — live Fed decision probabilities from Polymarket and Kalshi with historical chart. Currently pricing 97%+ no change at June FOMC.
+**Prediction Markets** live Fed decision probabilities from Polymarket and Kalshi with historical chart. Currently pricing 97%+ no change at June FOMC.
 
-**Morning Brief** — AI-synthesized audio briefing generated from live market data via Gemini and delivered via ElevenLabs. Bloomberg squawk style, no greeting, straight to the signal.
+**Morning Brief** AI-synthesized audio briefing generated from live market data via Gemini and delivered via ElevenLabs. Bloomberg squawk style, no greeting, straight to the signal.
 
-**Intelligence Brief** — written AI synthesis of the day's macro signals, cross-market gaps, and what to watch.
+**Intelligence Brief** written AI synthesis of the day's macro signals, cross-market gaps, and what to watch.
 
-**SOL Macro Beta** — 30-day Pearson correlation of SOL vs Nasdaq and SOL vs 10Y yield, showing whether crypto is amplifying or ignoring the macro narrative.
+**SOL Macro Beta** 30-day Pearson correlation of SOL vs Nasdaq and SOL vs 10Y yield, showing whether crypto is amplifying or ignoring the macro narrative.
 
-**Public Signals API** — REST endpoint at `/api/signals` returning live cross-market data for trading bot integration.
+**Public Signals API** REST endpoint at `/api/signals` returning live cross-market data for trading bot integration.
 
 ---
 
