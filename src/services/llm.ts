@@ -11,7 +11,6 @@ export interface NarrativeInput {
 
 async function callGemini(prompt: string, model: string): Promise<string> {
   const GEMINI_KEY = process.env.GEMINI_KEY ?? ''
-  console.log('Key being used:', GEMINI_KEY.substring(0, 15) + '...')
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
@@ -22,7 +21,7 @@ async function callGemini(prompt: string, model: string): Promise<string> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           maxOutputTokens: 800,
-          temperature: 0.5,
+          temperature: 0.4,
           thinkingConfig: { thinkingBudget: 0 }
         }
       }),
@@ -81,7 +80,7 @@ function buildPrompt(input: NarrativeInput): string {
     .join('\n')
 
   const divergences = input.divergences
-    .map(d => `${d.label} (${d.solanaLabel}): TradFi ${d.tradfiPrice.toLocaleString()} vs Solana ${d.solanaPrice.toLocaleString()} → ${d.divergencePct > 0 ? '+' : ''}${d.divergencePct.toFixed(2)}% ${d.divergencePct < 0 ? 'discount' : 'premium'}`)
+    .map(d => `${d.label} (${d.solanaLabel}): TradFi ${d.tradfiPrice.toLocaleString()} vs Solana ${d.solanaPrice.toLocaleString()} — ${d.divergencePct > 0 ? '+' : ''}${d.divergencePct.toFixed(2)}% ${d.divergencePct < 0 ? 'discount' : 'premium'} on Solana`)
     .join('\n')
 
   const solContext = input.solCorrelations
@@ -92,21 +91,25 @@ function buildPrompt(input: NarrativeInput): string {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
   })
 
-  return `You are the voice of CLEANYTICS — a cross-market intelligence platform that connects traditional finance, prediction markets, and Solana on-chain data. Your daily briefing is listened to by finance professionals on their morning commute. You are sharp, warm, and authoritative — like a brilliant colleague who has already read everything so they do not have to.
+  return `You are the voice of CLEANYTICS — a Solana-native macro intelligence terminal that connects traditional finance, prediction markets, and on-chain data. Your daily briefing is listened to by finance professionals and crypto traders. You are sharp, direct, and authoritative — like a Bloomberg squawk desk that actually understands Solana.
 
 Today is ${today}.
 
 STRICT AUDIO FORMAT RULES:
+- No greeting. Open immediately with the most important number or signal.
 - Write for the ear. Short, punchy sentences. Natural spoken rhythm.
-- Spell out all numbers: "ninety-five percent" not "95%", "four point four" not "4.4%", "eleven percent drop" not "-11%"
+- Spell out all numbers: "ninety-seven percent" not "97%", "four point four" not "4.4%"
 - Never use symbols: no percent signs, no dollar signs, no arrows, no plus or minus signs, no em-dashes, no asterisks, no markdown
 - Never start a sentence with "This"
-- Never say "We see", "significant", "notable", or "interesting"
+- Never say "we see", "significant", "notable", "interesting", "good morning", "hello"
 - No hedging. No filler. Every sentence earns its place.
 - Plain text only. No headers, no bullet points, no formatting of any kind.
 
+CONTEXT: The Warsh Effect
+On January 30th 2026, Trump nominated Kevin Warsh as Fed Chair. Gold fell eleven percent. Silver collapsed thirty-seven percent — its worst day since March 1980. TradFi closed for the weekend. On Solana, XAG silver perps on Pacifica never stopped trading. CLEANYTICS exists because of moments like this — when on-chain markets price macro events before TradFi reopens.
+
 USE CASE: ${input.useCaseTitle}
-CONTEXT: ${input.useCaseDescription}
+BACKGROUND: ${input.useCaseDescription}
 
 PREDICTION MARKETS — June FOMC:
 ${predMarkets}
@@ -114,32 +117,30 @@ ${predMarkets}
 TRADFI PRICE ACTION today:
 ${tradfi}
 
-SOLANA ON-CHAIN DIVERGENCES:
+SOLANA CROSS-MARKET GAPS (where Solana diverges from TradFi right now):
 ${divergences}
 
 ${solContext}
 
 Write exactly four paragraphs separated by single blank lines. No headers, no labels, just the paragraphs.
 
-Paragraph 1 — GREETING AND SETUP (3 sentences):
-Open with a warm greeting and weave in today's date naturally — like a colleague greeting you, not a robot announcing the date.
-Introduce the macro event in one sentence — what is happening and why it matters today specifically.
-End with the single most striking number from the prediction markets — make it land.
+Paragraph 1 — THE SIGNAL (2 sentences):
+Open with the single most striking prediction market number — make it land without any greeting.
+One sentence on what this conviction level means for the June FOMC and the Warsh era.
 
-Paragraph 2 — TRADFI READ (4 sentences):
-Lead with what gold and yields together are saying about real rate expectations — name the tension or confirmation explicitly.
-What the dollar is doing and whether it confirms the hawkish Warsh thesis or contradicts it.
-What equities are pricing — are they believing the stable rate path or running ahead of themselves.
-The single most important contradiction or confirmation in today's TradFi data — the thing a smart analyst would flag.
+Paragraph 2 — TRADFI READ (3 sentences):
+What gold and yields together are saying about real rate expectations under Warsh.
+What equities are pricing — are they believing the rate hold or running ahead of themselves.
+The single most important thing a smart analyst would flag in today's TradFi data.
 
 Paragraph 3 — THE SOLANA EDGE (3 sentences):
-What on-chain tokenized markets are pricing that TradFi alone cannot show — be specific about which assets and which direction.
-What the SOL macro beta correlation tells us about whether crypto is amplifying or ignoring the macro narrative right now.
-What BUIDL or the institutional bridge assets are doing — frame it as smart money signal.
+Where Solana is diverging from TradFi right now — name the specific asset, the gap size, and direction.
+What that gap tells us — is on-chain more bullish or bearish than TradFi, and why it matters before the FOMC.
+What the SOL macro beta correlation is signaling about whether crypto is amplifying or ignoring the macro narrative.
 
 Paragraph 4 — WHAT TO WATCH (2 sentences):
-The single most important thing to watch before the June FOMC — be specific, name the asset or indicator.
-Close with one forward-looking sentence that gives the listener something to think about on their commute.
+The single most important asset or indicator to watch before the June FOMC — be specific, name it.
+One forward-looking sentence that gives the listener something to think about.
 
-Write as if speaking warmly and directly to one person. Make them feel smarter for having listened.`
+Write as if speaking directly to one trader who has thirty seconds before their next meeting. Make every word count.`
 }

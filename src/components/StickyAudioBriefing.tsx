@@ -15,8 +15,6 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const paragraphs = narrative.split('\n\n').filter(p => p.trim()).map(p => p.replace(/\*\*/g, '').trim())
-  const firstSentence = (paragraphs[0]?.split('.')[0] ?? '') + '.'
-  const previewText = firstSentence.length > 100 ? firstSentence.substring(0, 100) + '...' : firstSentence
 
   async function handleGenerate() {
     setLoading(true)
@@ -73,10 +71,10 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
   return (
     <div style={{
       position: 'fixed',
-      top: '120px',
+      top: '80px',
       right: 0,
       zIndex: 100,
-      fontFamily: '"Cormorant Garamond", Georgia, serif',
+      fontFamily: 'Georgia, serif',
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -86,7 +84,7 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
         rel="stylesheet"
       />
 
-      {/* Tab trigger — always visible */}
+      {/* Tab — taller and wider */}
       <button
         onClick={() => setExpanded(e => !e)}
         style={{
@@ -96,17 +94,18 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
           background: '#8B5E3C',
           color: '#fff',
           border: 'none',
-          padding: '14px 8px',
-          fontSize: '10px',
+          padding: '20px 11px',
+          fontSize: '11px',
           fontWeight: 600,
-          letterSpacing: '0.18em',
+          letterSpacing: '0.2em',
           textTransform: 'uppercase',
           fontFamily: 'Georgia, serif',
           cursor: 'pointer',
           borderRadius: '4px 0 0 4px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '10px',
+          boxShadow: '-2px 2px 12px rgba(0,0,0,0.15)',
         }}
       >
         {isPlaying ? '⏸' : '▶'} Morning Brief
@@ -115,34 +114,25 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
       {/* Expanded panel */}
       {expanded && (
         <div style={{
-          width: '240px',
+          width: '280px',
           backgroundColor: '#fffef9',
-          borderTopWidth: '3px',
-          borderTopStyle: 'solid',
-          borderTopColor: '#8B5E3C',
-          borderBottomWidth: '1px',
-          borderBottomStyle: 'solid',
-          borderBottomColor: '#e8e2d6',
-          borderLeftWidth: '1px',
-          borderLeftStyle: 'solid',
-          borderLeftColor: '#e8e2d6',
+          borderTop: '3px solid #8B5E3C',
+          borderBottom: '1px solid #e8e2d6',
+          borderLeft: '1px solid #e8e2d6',
           boxShadow: '-4px 4px 24px rgba(0,0,0,0.08)',
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: '480px',
+          maxHeight: '520px',
         }}>
 
           {/* Header */}
           <div style={{
-            padding: '10px 14px',
-            borderBottomWidth: '1px',
-            borderBottomStyle: 'solid',
-            borderBottomColor: '#ede8de',
+            padding: '12px 16px',
+            borderBottom: '1px solid #ede8de',
             backgroundColor: '#FFF1E5',
           }}>
             <div style={{
-              fontSize: '14px', fontWeight: 600,
-              color: '#1a1a1a',
+              fontSize: '15px', fontWeight: 600, color: '#1a1a1a',
               fontFamily: '"Cormorant Garamond", Georgia, serif',
               letterSpacing: '0.01em',
             }}>
@@ -150,25 +140,18 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
             </div>
             <div style={{
               fontSize: '10px', color: '#9b8e80',
-              fontFamily: 'Georgia, serif',
-              fontStyle: 'italic', marginTop: '2px',
+              fontFamily: 'Georgia, serif', fontStyle: 'italic', marginTop: '2px',
             }}>
               {isPlaying ? 'Now playing...' : 'AI synthesis · ElevenLabs'}
             </div>
           </div>
 
           {/* Text preview */}
-          <div style={{
-            padding: '12px 14px',
-            overflowY: 'auto',
-            maxHeight: '220px',
-          }}>
+          <div style={{ padding: '14px 16px', overflowY: 'auto', flex: 1 }}>
             {paragraphs.map((p, i) => (
               <p key={i} style={{
-                fontSize: '11px',
-                lineHeight: 1.8,
-                color: '#4a3c30',
-                margin: '0 0 10px',
+                fontSize: '12px', lineHeight: 1.8, color: '#4a3c30',
+                margin: '0 0 12px',
                 fontFamily: '"Cormorant Garamond", Georgia, serif',
                 fontStyle: 'italic',
               }}>
@@ -179,10 +162,8 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
 
           {/* Audio controls */}
           <div style={{
-            padding: '10px 14px',
-            borderTopWidth: '1px',
-            borderTopStyle: 'solid',
-            borderTopColor: '#ede8de',
+            padding: '12px 16px',
+            borderTop: '1px solid #ede8de',
             backgroundColor: '#FFF1E5',
             flexShrink: 0,
           }}>
@@ -193,30 +174,22 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
                 onClick={handleGenerate}
                 disabled={loading}
                 style={{
-                  width: '100%',
-                  padding: '8px 0',
+                  width: '100%', padding: '10px 0',
                   backgroundColor: loading ? '#ede8de' : '#8B5E3C',
                   color: loading ? '#b0a090' : '#fff',
                   border: 'none',
-                  borderRadius: '3px',
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
+                  fontSize: '11px', fontWeight: 600,
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'Georgia, serif',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   transition: 'background 0.2s',
                 }}
               >
                 {loading ? (
                   <>
                     <span style={{
-                      width: '8px', height: '8px',
-                      borderRadius: '50%',
+                      width: '8px', height: '8px', borderRadius: '50%',
                       border: '1.5px solid #b0a090',
                       borderTopColor: 'transparent',
                       display: 'inline-block',
@@ -231,17 +204,10 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
                 <button
                   onClick={togglePlay}
                   style={{
-                    width: '30px', height: '30px',
-                    borderRadius: '50%',
-                    backgroundColor: '#8B5E3C',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    backgroundColor: '#8B5E3C', color: '#fff', border: 'none',
+                    cursor: 'pointer', fontSize: '12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}
                 >
                   {isPlaying ? '⏸' : '▶'}
@@ -256,10 +222,8 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
                   </div>
                   <div style={{ height: '2px', backgroundColor: '#ede8de', borderRadius: '1px' }}>
                     <div style={{
-                      height: '100%',
-                      width: `${progress}%`,
-                      backgroundColor: '#8B5E3C',
-                      borderRadius: '1px',
+                      height: '100%', width: `${progress}%`,
+                      backgroundColor: '#8B5E3C', borderRadius: '1px',
                       transition: 'width 0.5s linear',
                     }} />
                   </div>
@@ -278,7 +242,6 @@ export default function StickyAudioBriefing({ narrative }: { narrative: string }
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
       `}</style>
     </div>
   )
