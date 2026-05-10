@@ -52,17 +52,17 @@ CLEANYTICS exists because macro events don't wait for market hours. It connects 
 
 ## Signals API
 
-Public REST endpoint — no auth required, CORS open.
+Public REST endpoint, no auth required, CORS open.
 
 ```
 GET https://cleanytics.vercel.app/api/signals
 ```
 
 Returns:
-- `predictionMarkets` — Polymarket and Kalshi probabilities for all Fed outcomes
-- `signals` — all assets with TradFi, Solana spot, Solana perp, and gap analysis
-- `notableSignals` — filtered to gaps >= 0.5%, sorted by magnitude
-- `meta` — data sources and rate limit info
+- `predictionMarkets` Polymarket and Kalshi probabilities for all Fed outcomes
+- `signals` all assets with TradFi, Solana spot, Solana perp, and gap analysis
+- `notableSignals` filtered to gaps >= 0.5%, sorted by magnitude
+- `meta` data sources and rate limit info
 
 Revalidates every 60 seconds.
 
