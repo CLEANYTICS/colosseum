@@ -7,6 +7,7 @@ Live at [cleanytics.vercel.app](https://cleanytics.vercel.app)
 ---
 
 ## The Warsh Effect
+For the MVP we chose the Warsh effect, but many more cases to come :)
 
 January 30th, 2026. Trump nominates Kevin Warsh as Fed Chair on a Friday afternoon. Gold drops 11%. Silver drops 37%, its worst single day since March 1980. Every TradFi broker closes for the weekend.
 
